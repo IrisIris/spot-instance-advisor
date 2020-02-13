@@ -32,6 +32,7 @@ var (
 		"InstanceTypeId": "机型",
 		"ZoneId":         "可用区",
 		"PricePerCore":   "核时价格",
+		"Cutoff":         "折扣",
 	}
 )
 

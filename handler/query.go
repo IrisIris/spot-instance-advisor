@@ -95,7 +95,6 @@ func queryByReq(advisor *pkg.Advisor, DingDingTokens *[]string) {
 			Text:  "无搜索结果",
 		},
 	}
-	qType := OnceQuery
 
 	spotInstancePrices, err := advisor.SpotPricesAnalysis()
 	if err != nil {
@@ -129,11 +128,12 @@ func queryByReq(advisor *pkg.Advisor, DingDingTokens *[]string) {
 			InstanceTypeId: strings.Replace(item.InstanceTypeId, "ecs.", "", 1),
 			ZoneId:         strings.Replace(item.ZoneId, advisor.Region+"-", "", -1),
 			PricePerCore:   pkg.Decimal(item.PricePerCore),
+			Cutoff:			pkg.Decimal(item.Discount),
 		})
 		count++
 	}
 
-	SendResToDingDing(advisor, DingDingTokens, &toShow, qType, 0.0, false)
+	SendResToDingDing(advisor, DingDingTokens, &toShow, OnceQuery, 0.0, false)
 }
 
 func getByReq(advisor *pkg.Advisor) *[]pkg.AdvisorResponse {

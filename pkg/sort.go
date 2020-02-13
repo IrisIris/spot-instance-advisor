@@ -26,7 +26,8 @@ func (sp SortedInstancePrices) Len() int {
 }
 
 func (sp SortedInstancePrices) Less(i, j int) bool {
-	return sp[i].PricePerCore < sp[j].PricePerCore
+	//return sp[i].PricePerCore < sp[j].PricePerCore
+	return sp[i].Discount < sp[j].Discount
 }
 
 func (sp SortedInstancePrices) Swap(i, j int) {

@@ -178,7 +178,7 @@ func SendResToDingDing(advisor *pkg.Advisor, dingDingTokens *[]string, toShow *[
 
 	if qType == UnKown {
 		for _, item := range *toShow {
-			price, err := strconv.ParseFloat(item.PricePerCore, 64)
+			price, err := strconv.ParseFloat(item.Cutoff, 64)
 			if err != nil {
 				logger.Errorf(" parse str to float error: ", err.Error())
 				continue
@@ -248,6 +248,7 @@ func SendResToDingDing(advisor *pkg.Advisor, dingDingTokens *[]string, toShow *[
 		MaxMemory: advisor.MaxMemory,
 		Cutoff:    advisor.Cutoff,
 	}
+
 	consByte, err := json.Marshal(consToshow)
 	if err != nil {
 		logger.Errorf("json encode error", err.Error())

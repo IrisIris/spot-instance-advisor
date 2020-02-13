@@ -15,56 +15,6 @@ import (
 
 var ALARMNOTEMPTYFIELD = []string{"sys.ding.conversationTitle", "region"}
 
-func judgeAlarmsByPolling(coversationAlarm *map[string][]pkg.AlarmConfig) {
-	for convTitle, envConf := range *coversationAlarm {
-		dingDingTokens, err := GetDingDingTokensByConvTitle(convTitle, pkg.Cfg)
-		if dingDingTokens == nil || err != nil {
-			logger.WithFields(logger.Fields{
-				"convTitle": convTitle,
-				"pkg.Cfg":   pkg.Cfg,
-			}).Errorf("get dingdingTokens by conv title error: " + err.Error())
-			continue
-		}
-		// new advisor
-		for _, conf := range envConf {
-			if conf.Cons == nil {
-				continue
-			}
-			if len(conf.Cron) == 0 {
-				continue
-			}
-			cron, cons, priceMax := conf.Cron, conf.Cons, conf.PriceMax
-			fmt.Printf("cron job start ,cron: %s, cons:%s, dingDingTokens:%s, priceMax:%s", cron, cons, dingDingTokens, priceMax)
-			//go judgeOneByPolling(cons, dingDingTokens, priceMax)
-			go func(cons *pkg.Advisor, dingDingTokens *[]string, priceMax float64) {
-				nowRes := &[]pkg.AdvisorResponse{}
-				showed := &[]pkg.AdvisorChangedInstance{}
-				newChanged := &[]pkg.AdvisorResponse{}
-				var startTime *int64
-				startTime = new(int64)
-				*startTime = time.Now().Unix()
-				for {
-					judgeOne(cons, dingDingTokens, priceMax, nowRes, showed, newChanged, startTime)
-					time.Sleep(5 * time.Second)
-				}
-			}(cons, dingDingTokens, priceMax)
-		}
-	}
-}
-
-func judgeOneByPolling(cons *pkg.Advisor, dingDingTokens *[]string, priceMax float64) {
-	nowRes := &[]pkg.AdvisorResponse{}
-	showed := &[]pkg.AdvisorChangedInstance{}
-	newChanged := &[]pkg.AdvisorResponse{}
-	var startTime *int64
-	startTime = new(int64)
-	*startTime = time.Now().Unix()
-	for {
-		judgeOne(cons, dingDingTokens, priceMax, nowRes, showed, newChanged, startTime)
-		time.Sleep(5 * time.Second)
-	}
-}
-
 func AlarmHandler(w http.ResponseWriter, r *http.Request) {
 	vals := url.Values{}
 	if r != nil {
@@ -176,6 +126,7 @@ func getAlarmsByReq(advisor *pkg.Advisor, priceMax float64) (*[]pkg.AdvisorRespo
 			InstanceTypeId: strings.Replace(item.InstanceTypeId, "ecs.", "", 1),
 			ZoneId:         strings.Replace(item.ZoneId, advisor.Region+"-", "", -1),
 			PricePerCore:   pkg.Decimal(item.PricePerCore),
+			Cutoff:         pkg.Decimal(item.Discount),
 		})
 		count++
 	}
@@ -252,10 +203,13 @@ func judgeOne(advisor *pkg.Advisor, dingDingTokens *[]string, priceMax float64, 
 	}
 
 	for _, item := range *nowResp {
-		foundRes := isItemExists(item, showed, priceMax)
-		if foundRes == 0 || foundRes == 2 { // not exactly same
+		if isToAlarm(item, priceMax) {
 			*newChanged = append(*newChanged, item)
 		}
+		//foundRes := isItemExists(item, showed, priceMax)
+		//if foundRes == 0 || foundRes == 2 { // not exactly same
+		//	*newChanged = append(*newChanged, item)
+		//}
 	}
 
 	if (time.Now().Unix() - *lastTime) >= 24*60*60 {
@@ -269,8 +223,8 @@ func judgeOne(advisor *pkg.Advisor, dingDingTokens *[]string, priceMax float64, 
 			})
 		}
 		*lastTime = time.Now().Unix()
-		fmt.Println("lastTime is set to be", *lastTime)
-		fmt.Println("after oneday showed reset to be ", *showed)
+		//fmt.Println("lastTime is set to be", *lastTime)
+		//fmt.Println("after oneday showed reset to be ", *showed)
 	}
 
 	if len(*newChanged) != 0 {
@@ -286,6 +240,18 @@ func judgeOne(advisor *pkg.Advisor, dingDingTokens *[]string, priceMax float64, 
 
 }
 
+func isToAlarm(toSearch pkg.AdvisorResponse, max float64) bool {
+	res := false
+	cutoffFloat, err := strconv.ParseFloat(toSearch.Cutoff, 64)
+	if err != nil {
+		logger.Errorf("parse str to float error: ", err.Error())
+		return false
+	}
+	if cutoffFloat > max {
+		res = true
+	}
+	return res
+}
 func isItemExists(toSearch pkg.AdvisorResponse, sets *[]pkg.AdvisorChangedInstance, priceMax float64) int {
 	found, setKey := 0, 0
 	for key, item := range *sets {
