@@ -23,7 +23,7 @@ type Advisor struct {
 	AccessKeyId     string  `json:"access_key_id,omitempty"`
 	AccessKeySecret string  `json:"access_key_secret,omitempty"`
 	Region          string  `json:"region"`
-	Cpu             int     `json:"cpu"`
+	Cpu             int     `json:"cpu,omitempty"`
 	Memory          int     `json:"memory"`
 	MaxCpu          int     `json:"max_cpu"`
 	MaxMemory       int     `json:"max_memory"`
