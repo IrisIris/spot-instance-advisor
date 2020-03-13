@@ -39,10 +39,7 @@ func SpotHandler(w http.ResponseWriter, r *http.Request) {
 	// get new advisor
 	advisor, err := pkg.NewAdvisor(jsonBytes)
 	if err != nil {
-		logger.WithFields(logger.Fields{
-			"advisor": *advisor,
-			"error":   err,
-		}).Errorf("new advisor error :")
+		logger.Errorf("new advisor error :", err)
 		resp = PackageResp(false, "new advisor err: "+err.Error(), nil)
 		sendResponse(w, resp)
 		return
@@ -128,7 +125,7 @@ func queryByReq(advisor *pkg.Advisor, DingDingTokens *[]string) {
 			InstanceTypeId: strings.Replace(item.InstanceTypeId, "ecs.", "", 1),
 			ZoneId:         strings.Replace(item.ZoneId, advisor.Region+"-", "", -1),
 			PricePerCore:   pkg.Decimal(item.PricePerCore),
-			Cutoff:			pkg.Decimal(item.Discount),
+			Cutoff:         pkg.Decimal(item.Discount),
 		})
 		count++
 	}

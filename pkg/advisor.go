@@ -23,12 +23,12 @@ type Advisor struct {
 	AccessKeyId     string  `json:"access_key_id,omitempty"`
 	AccessKeySecret string  `json:"access_key_secret,omitempty"`
 	Region          string  `json:"region"`
-	Cpu             int     `json:"cpu,omitempty"`
-	Memory          int     `json:"memory"`
-	MaxCpu          int     `json:"max_cpu"`
-	MaxMemory       int     `json:"max_memory"`
+	Cpu             int     `json:"cpu,string"`
+	Memory          int     `json:"memory,string"`
+	MaxCpu          int     `json:"max_cpu,string"`
+	MaxMemory       int     `json:"max_memory,string"`
 	Family          string  `json:"family,omitempty"`
-	Cutoff          float64 `json:"cutoff"`
+	Cutoff          float64 `json:"cutoff,string"`
 	Limit           int     `json:"limit"`
 	Resolution      int     `json:"resolution"`
 }
